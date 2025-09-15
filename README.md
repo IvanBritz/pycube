@@ -1,91 +1,79 @@
+import pygame
+from pygame.locals import *
 from OpenGL.GL import *
-from OpenGL.GLUT import *
 from OpenGL.GLU import *
-import sys
+import math
 
-angle = 0.0
-width, height = 600, 600
+# Initialize Pygame
+pygame.init()
 
-def hsv_to_rgb(h, s, v):
-    h_i = int(h * 6)
-    f = h * 6 - h_i
-    p = v * (1 - s)
-    q = v * (1 - f * s)
-    t = v * (1 - (1 - f) * s)
-    h_i = h_i % 6
-    if h_i == 0: return v, t, p
-    if h_i == 1: return q, v, p
-    if h_i == 2: return p, v, t
-    if h_i == 3: return p, q, v
-    if h_i == 4: return t, p, v
-    if h_i == 5: return v, p, q
+# Set display size
+display = (800, 600)
+pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
 
-def init():
-    glClearColor(0, 0, 0, 1)
-    glEnable(GL_DEPTH_TEST)
+# Set window caption with your full name
+pygame.display.set_caption("03 Lab 1 - Ivan Britz")
 
-def reshape(w, h):
-    global width, height
-    width, height = w, h
-    glViewport(0, 0, w, h)
-    glMatrixMode(GL_PROJECTION)
-    glLoadIdentity()
-    gluPerspective(45, w / h if h != 0 else 1, 0.1, 50.0)
-    glMatrixMode(GL_MODELVIEW)
+# Set perspective and translate object
+gluPerspective(45, (display[0] / display[1]), 0.1, 50.0)
+glTranslatef(0, 0, -5)
 
-def draw_cube():
-    global angle
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-    glLoadIdentity()
-    glTranslatef(0, 0, -7)
-    glRotatef(angle, 1, 1, 0)
+# Define cube vertices
+vertices = [
+    (1, 1, 1),   # 0
+    (1, 1, -1),  # 1
+    (1, -1, -1), # 2
+    (1, -1, 1),  # 3
+    (-1, 1, 1),  # 4
+    (-1, -1, -1),# 5
+    (-1, -1, 1), # 6
+    (-1, 1, -1)  # 7
+]
 
-    # Color cycles with rotation
-    hue = (angle % 360) / 360.0
-    r, g, b = hsv_to_rgb(hue, 1, 1)
-    glColor3f(r, g, b)
+# Define cube edges (pairs of vertices)
+edges = [
+    (0, 1), (1, 2), (2, 3), (3, 0),  # front square
+    (4, 7), (7, 5), (5, 6), (6, 4),  # back square
+    (3, 6), (0, 4), (2, 5), (1, 7)   # connections
+]
 
-    # Draw cube edges only
+# Function to draw cube
+def draw_cube(color):
+    glColor3f(*color)  # Apply current color
     glBegin(GL_LINES)
-    # Front face
-    glVertex3f(-1, -1,  1); glVertex3f( 1, -1,  1)
-    glVertex3f( 1, -1,  1); glVertex3f( 1,  1,  1)
-    glVertex3f( 1,  1,  1); glVertex3f(-1,  1,  1)
-    glVertex3f(-1,  1,  1); glVertex3f(-1, -1,  1)
-
-    # Back face
-    glVertex3f(-1, -1, -1); glVertex3f( 1, -1, -1)
-    glVertex3f( 1, -1, -1); glVertex3f( 1,  1, -1)
-    glVertex3f( 1,  1, -1); glVertex3f(-1,  1, -1)
-    glVertex3f(-1,  1, -1); glVertex3f(-1, -1, -1)
-
-    # Connections between front and back
-    glVertex3f(-1, -1,  1); glVertex3f(-1, -1, -1)
-    glVertex3f( 1, -1,  1); glVertex3f( 1, -1, -1)
-    glVertex3f( 1,  1,  1); glVertex3f( 1,  1, -1)
-    glVertex3f(-1,  1,  1); glVertex3f(-1,  1, -1)
+    for edge in edges:
+        for vertex in edge:
+            glVertex3fv(vertices[vertex])
     glEnd()
 
-    glutSwapBuffers()
+# Function to generate color cycle (using sine waves)
+def get_color(t):
+    r = (math.sin(t) + 1) / 2
+    g = (math.sin(t + 2) + 1) / 2
+    b = (math.sin(t + 4) + 1) / 2
+    return (r, g, b)
 
-def update(value):
-    global angle
-    angle += 2
-    if angle > 360:
-        angle -= 360
-    glutPostRedisplay()
-    glutTimerFunc(16, update, 0)
+# Main loop
+t = 0
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            quit()
 
-def main():
-    glutInit(sys.argv)
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
-    glutInitWindowSize(width, height)
-    glutCreateWindow(b"Rotating Colorful Wireframe Cube")
-    glutDisplayFunc(draw_cube)
-    glutReshapeFunc(reshape)
-    glutTimerFunc(0, update, 0)
-    init()
-    glutMainLoop()
+    # Rotate cube
+    glRotatef(1, 1, 1, 1)
 
-if __name__ == "__main__":
-    main()
+    # Clear screen and depth buffer
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+    # Get dynamic color
+    color = get_color(t)
+    draw_cube(color)
+
+    # Update display
+    pygame.display.flip()
+    pygame.time.wait(15)
+
+    # Increase time for color cycling
+    t += 0.05
