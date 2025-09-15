@@ -7,11 +7,11 @@ angle = 0.0
 width, height = 600, 600
 
 def hsv_to_rgb(h, s, v):
-    h_i = int(h*6)
-    f = h*6 - h_i
+    h_i = int(h * 6)
+    f = h * 6 - h_i
     p = v * (1 - s)
-    q = v * (1 - f*s)
-    t = v * (1 - (1 - f)*s)
+    q = v * (1 - f * s)
+    t = v * (1 - (1 - f) * s)
     h_i = h_i % 6
     if h_i == 0: return v, t, p
     if h_i == 1: return q, v, p
@@ -40,41 +40,30 @@ def draw_cube():
     glTranslatef(0, 0, -7)
     glRotatef(angle, 1, 1, 0)
 
+    # Color cycles with rotation
     hue = (angle % 360) / 360.0
     r, g, b = hsv_to_rgb(hue, 1, 1)
     glColor3f(r, g, b)
 
-    glBegin(GL_QUADS)
+    # Draw cube edges only
+    glBegin(GL_LINES)
     # Front face
-    glVertex3f(-1, -1,  1)
-    glVertex3f( 1, -1,  1)
-    glVertex3f( 1,  1,  1)
-    glVertex3f(-1,  1,  1)
+    glVertex3f(-1, -1,  1); glVertex3f( 1, -1,  1)
+    glVertex3f( 1, -1,  1); glVertex3f( 1,  1,  1)
+    glVertex3f( 1,  1,  1); glVertex3f(-1,  1,  1)
+    glVertex3f(-1,  1,  1); glVertex3f(-1, -1,  1)
+
     # Back face
-    glVertex3f(-1, -1, -1)
-    glVertex3f(-1,  1, -1)
-    glVertex3f( 1,  1, -1)
-    glVertex3f( 1, -1, -1)
-    # Top face
-    glVertex3f(-1,  1, -1)
-    glVertex3f(-1,  1,  1)
-    glVertex3f( 1,  1,  1)
-    glVertex3f( 1,  1, -1)
-    # Bottom face
-    glVertex3f(-1, -1, -1)
-    glVertex3f( 1, -1, -1)
-    glVertex3f( 1, -1,  1)
-    glVertex3f(-1, -1,  1)
-    # Right face
-    glVertex3f( 1, -1, -1)
-    glVertex3f( 1,  1, -1)
-    glVertex3f( 1,  1,  1)
-    glVertex3f( 1, -1,  1)
-    # Left face
-    glVertex3f(-1, -1, -1)
-    glVertex3f(-1, -1,  1)
-    glVertex3f(-1,  1,  1)
-    glVertex3f(-1,  1, -1)
+    glVertex3f(-1, -1, -1); glVertex3f( 1, -1, -1)
+    glVertex3f( 1, -1, -1); glVertex3f( 1,  1, -1)
+    glVertex3f( 1,  1, -1); glVertex3f(-1,  1, -1)
+    glVertex3f(-1,  1, -1); glVertex3f(-1, -1, -1)
+
+    # Connections between front and back
+    glVertex3f(-1, -1,  1); glVertex3f(-1, -1, -1)
+    glVertex3f( 1, -1,  1); glVertex3f( 1, -1, -1)
+    glVertex3f( 1,  1,  1); glVertex3f( 1,  1, -1)
+    glVertex3f(-1,  1,  1); glVertex3f(-1,  1, -1)
     glEnd()
 
     glutSwapBuffers()
@@ -91,7 +80,7 @@ def main():
     glutInit(sys.argv)
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
     glutInitWindowSize(width, height)
-    glutCreateWindow(b"Rotating Colorful Cube")
+    glutCreateWindow(b"Rotating Colorful Wireframe Cube")
     glutDisplayFunc(draw_cube)
     glutReshapeFunc(reshape)
     glutTimerFunc(0, update, 0)
